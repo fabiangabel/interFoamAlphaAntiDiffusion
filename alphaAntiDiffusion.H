@@ -56,7 +56,7 @@
     */
 
     // initialize control variables (geplant: maxIter in fVSolution angeben)
-    int maxIter=5;
+    int maxIter=10;
     scalar TOL1=0.0;
     scalar TOL2=0.0;
     scalar numerator1 = 0.0;
@@ -83,7 +83,8 @@
     dimensionedScalar deltaTau("deltaTau",dimensionSet(0,1,1,0,0,0,0),
                 0.25*Foam::pow(deltaXMin.value(),2)/(uMax.value()+VSMALL));
 
-    Info << "Solving Anti-diffusion eqation: " << endl;
+    //Info << "Solving Anti-diffusion eqation: " << endl;
+    Info << "Solving Anti-diffusion eqation: " ;
     //Sout << "Solving Anti-diffusion eqation: " << endl;
 
 //##################### Perform interface steepening method ########################
@@ -150,17 +151,20 @@
                         alphaApostNf[faceI] = alpha1[own];
                         //Info << "case3, alphaApostNf[faceI] = " << alphaApostNf[faceI] << endl;
                     }
-                    Sout << "\t internal Field: " <<mesh.C()[0]<< "  " << own << " "
-                        << alpha1[own]
+                    /*Sout << "INT:  " << mesh.C()[0].component(0)
+                        << " " << own
+                        << " " << alpha1[own]
                         << " " << alpha1[neigh]
+                        << " " << mirror*mesh.Sf()[faceI]
                         //<< " " << alphaApostNf.boundaryField()[patchI][faceI]
-                        << " " << gradAlphaNProjectedf[faceI]
-                        << " " << dAlphaNDcf[faceI]
+                        << " " << mirror*gradAlphaNProjectedf[faceI]
+                        << " " << mirror*dAlphaNDcf[faceI]
                         << " " << gradAlphaNLim[own]
                         //<< " " << endl;
                         << " " ;
+                        */
                     gradAlphaNLim[cellI] += alphaApostNf[faceI]*(mirror*mesh.Sf()[faceI]);
-                    Sout << gradAlphaNLim[cellI] << endl;
+                    //Sout << gradAlphaNLim[cellI] << endl;
                     //gradAlphaNLim[cellI] += alphaApostNf[faceI]*mesh.Sf()[faceI];
                     //Info << cellI << " " << faceI << " " << gradAlphaNLim[cellI] << endl;
                 }
@@ -197,8 +201,20 @@
                         alphaApostNf.boundaryField()[patchI][faceI] = alpha1[own];
                         //Info << "case3, alphaApostNf[faceI] = " << alphaApostNf.boundaryField()[patchI][faceI] << endl;
                     }
+                    /*Sout << "DIR:  " << mesh.C()[0].component(0)
+                         << " " << own << " " << alpha1[own]
+                         << " " << alpha1.boundaryField()[patchI][faceI]
+                         << " " << mesh.Sf()[faceIGlobal]
+                         //<< " " << alphaApostNf.boundaryField()[patchI][faceI]
+                         << " " << gradAlphaNProjectedf.boundaryField()[patchI][faceI]
+                         << " " << dAlphaNDcf.boundaryField()[patchI][faceI]
+                         << " " << gradAlphaNLim[own]
+                         //<< " " << endl;
+                         << " " ;
+                         */
                     // no mirror needed since faces of patches always store an outward pointing normal vector
                     gradAlphaNLim[own] += alphaApostNf.boundaryField()[patchI][faceI]*mesh.Sf()[faceIGlobal];
+                    //Sout << gradAlphaNLim[own] << endl;
                 }
             }
             //same as fixedValue?
@@ -227,17 +243,19 @@
                         alphaApostNf.boundaryField()[patchI][faceI] = alpha1[own];
                         //Info << "case3, alphaApostNf[faceI] = " << alphaApostNf[faceI] << endl;
                     }
-                    //Info << "\t" << own << " " << alpha1[own]
-                    Sout << "\t Processor Patch: " << own << " " << alpha1[own]
+                    /*Sout << "PROC: " << mesh.C()[0].component(0)
+                         << " " << own << " " << alpha1[own]
                          << " " << alpha1.boundaryField()[patchI][faceI]
+                         << " " << mesh.Sf()[faceIGlobal]
                          //<< " " << alphaApostNf.boundaryField()[patchI][faceI]
                          << " " << gradAlphaNProjectedf.boundaryField()[patchI][faceI]
                          << " " << dAlphaNDcf.boundaryField()[patchI][faceI]
                          << " " << gradAlphaNLim[own]
                          //<< " " << endl;
                          << " " ;
+                         */
                     gradAlphaNLim[own] += alphaApostNf.boundaryField()[patchI][faceI]*mesh.Sf()[faceIGlobal];
-                    Sout << gradAlphaNLim[own] << endl;
+                    //Sout << gradAlphaNLim[own] << endl;
                 }
             }
             //Sout << " " << endl;
@@ -248,7 +266,20 @@
         	{
         	    label faceIGlobal = faceI+mesh.boundaryMesh()[patchI].start();
         	    label own = mesh.owner()[faceIGlobal];
+                    /*Sout << "GRAD: " << mesh.C()[0].component(0)
+                         << " " << own
+                         << " " << alpha1[own]
+                         << " " << alpha1.boundaryField()[patchI][faceI]
+                         << " " << mesh.Sf()[faceIGlobal]
+                         //<< " " << alphaApostNf.boundaryField()[patchI][faceI]
+                         << " " << gradAlphaNProjectedf.boundaryField()[patchI][faceI]
+                         << " " << dAlphaNDcf.boundaryField()[patchI][faceI]
+                         << " " << gradAlphaNLim[own]
+                         //<< " " << endl;
+                         << " " ;
+                         */
                     gradAlphaNLim[own] += alpha1[own]*mesh.Sf()[faceIGlobal];
+                    //Sout << gradAlphaNLim[own] << endl;
                     //Info << "zeroGradient " << own << " " << mesh.Sf()[faceI] << endl;
                 }
             }
@@ -259,9 +290,16 @@
         forAll (mesh.cells(),cellI)
         {
             gradAlphaNLim[cellI] = gradAlphaNLim[cellI]/mesh.V()[cellI];
+            /*Sout << mesh.C()[0].component(0)
+                 << " " << cellI
+                 << " " << gradAlphaNLim[cellI]
+                 << endl;*/
             //Info << cellI << " gradAlphaNLim[cellI]= " << gradAlphaNLim[cellI] << " " << mesh.V()[cellI] << endl;
             //Info << endl;
         }
+
+        // update cell centre gradient
+        gradAlphaNLim.correctBoundaryConditions();
 
         // (28) flux limiting due to minimization of gradient al cell face #########
         //##########################################################################
@@ -281,13 +319,34 @@
                     gradAlphaNf[faceI] = gradAlphaNLim[neigh];
                 }
             }
-            //else if PROC minEqOp
+            Sout << "INT:  " <<  mesh.C()[0].component(0)
+                 << " " << gradAlphaNf[faceI]
+                 << endl;
         }
         //Info << gradAlphaNf << endl;
         // Necessary to ensure boundedness and global continuity
         forAll (gradAlphaNf.boundaryField(), patchI)
         {
-            gradAlphaNf.boundaryField()[patchI] *= 0.0;
+            if (alpha1.boundaryField()[patchI].type() == "processor")
+            {
+                forAll(alpha1.boundaryField()[patchI], faceI)
+                {
+                    label faceIGlobal = faceI+mesh.boundaryMesh()[patchI].start();
+                    label own = mesh.owner()[faceIGlobal];
+                    if (mag(gradAlphaNLim[own]) <= mag(gradAlphaNLim.boundaryField()[patchI][faceI]))
+                    {
+                        gradAlphaNf.boundaryField()[patchI][faceI] = gradAlphaNLim[own];
+                    }
+                    else
+                    {
+                        gradAlphaNf.boundaryField()[patchI][faceI] = gradAlphaNLim.boundaryField()[patchI][faceI];
+                    }
+                    Sout << "PROC: " <<  mesh.C()[0].component(0)
+                         << " " << gradAlphaNf.boundaryField()[patchI][faceI]
+                         << endl;
+                }
+            }
+            else gradAlphaNf.boundaryField()[patchI] *= 0.0;
         }
         //Info << gradAlphaNf << endl;
 
@@ -316,12 +375,12 @@
                     denominator2 = denominator[cellI]*mesh.V()[cellI];
                 }
 	    }
-            Sout << "before: " << numerator1 << " " << denominator1 << " " << numerator2 << " " << denominator2 << endl;
+            //Sout << "before: " << numerator1 << " " << denominator1 << " " << numerator2 << " " << denominator2 << endl;
 	    Foam::reduce(numerator1, sumOp<scalar>());
 	    Foam::reduce(denominator1, sumOp<scalar>());
 	    Foam::reduce(numerator2, maxOp<scalar>());
 	    Foam::reduce(denominator2, maxOp<scalar>());
-            Sout << "after: " << numerator1 << " " << denominator1 << " " << numerator2 << " " << denominator2 << endl;
+            //Sout << "after: " << numerator1 << " " << denominator1 << " " << numerator2 << " " << denominator2 << endl;
 	    TOL1 = numerator1/denominator1;
 	    TOL2 = numerator2/denominator2;
         if ((TOL1 <= 1.0 && TOL2 <= 1.0) || i==maxIter-1)
@@ -339,6 +398,11 @@
         diffGradAlpha =
             //fvc::div(-mag(phi/mesh.magSf()) * gradAlphaNf & mesh.Sf());
             fvc::div(-mag(phi/mesh.magSf()) * gradAlphaNfProjectedf);
+
+        //forAll (mesh.cells(),cellI)
+        //{
+        //    Sout << mesh.C()[0].component(0) << " " << diffGradAlpha[cellI] << endl;
+        //}
 
         // (31) solve discretized equation explicitely ############################
         //##########################################################################
@@ -359,6 +423,14 @@
                  << diffGradAlpha[cellI] << endl;
         }
         */
+        // update values for next iteration
+        alpha1.correctBoundaryConditions();
+        gradAlphaNCd.correctBoundaryConditions();
+        alphaNf = fvc::interpolate(alpha1);
+        dAlphaNDcf = fvc::snGrad(alpha1);
+        //apparently it is not possible to update surface fields using .correctBoundaryConditions()
+        //alphaNf.correctBoundaryConditions();
+        //dAlphaNDcf.correctBoundaryConditions();
     }
 
     //alpha1.write();

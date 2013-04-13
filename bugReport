@@ -1,0 +1,3 @@
+sort -bnk 3 log_parallel | grep 0.0078125 >proc0
+
+update variable values accurately every iteration of alphaAntiDiffusion
