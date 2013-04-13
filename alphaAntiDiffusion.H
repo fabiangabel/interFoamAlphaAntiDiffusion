@@ -319,9 +319,10 @@
                     gradAlphaNf[faceI] = gradAlphaNLim[neigh];
                 }
             }
-            Sout << "INT:  " <<  mesh.C()[0].component(0)
+            /*Sout << "INT:  " <<  mesh.C()[0].component(0)
                  << " " << gradAlphaNf[faceI]
                  << endl;
+                 */
         }
         //Info << gradAlphaNf << endl;
         // Necessary to ensure boundedness and global continuity
@@ -341,9 +342,10 @@
                     {
                         gradAlphaNf.boundaryField()[patchI][faceI] = gradAlphaNLim.boundaryField()[patchI][faceI];
                     }
-                    Sout << "PROC: " <<  mesh.C()[0].component(0)
+                    /*Sout << "PROC: " <<  mesh.C()[0].component(0)
                          << " " << gradAlphaNf.boundaryField()[patchI][faceI]
                          << endl;
+                         */
                 }
             }
             else gradAlphaNf.boundaryField()[patchI] *= 0.0;
@@ -432,10 +434,13 @@
         //alphaNf.correctBoundaryConditions();
         //dAlphaNDcf.correctBoundaryConditions();
     }
+Sout << mesh.C()[0].component(0) << " finished successfully" << endl;
+
 
     //alpha1.write();
     //U.write();
     //std::cout << 1/0 << endl;
 
 }
+Sout << mesh.C()[0].component(0) << " finished successfully" << endl;
 //#################################################################################
