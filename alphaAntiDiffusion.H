@@ -83,8 +83,8 @@
     dimensionedScalar deltaTau("deltaTau",dimensionSet(0,1,1,0,0,0,0),
                 0.25*Foam::pow(deltaXMin.value(),2)/(uMax.value()+VSMALL));
 
-    //Info << "Solving Anti-diffusion eqation: " << endl;
-    Sout << "Solving Anti-diffusion eqation: " << endl;
+    Info << "Solving Anti-diffusion eqation: " << endl;
+    //Sout << "Solving Anti-diffusion eqation: " << endl;
 
 //##################### Perform interface steepening method ########################
 
@@ -150,7 +150,7 @@
                         alphaApostNf[faceI] = alpha1[own];
                         //Info << "case3, alphaApostNf[faceI] = " << alphaApostNf[faceI] << endl;
                     }
-                    Sout << "\t internal Field: " << own << " "
+                    Sout << "\t internal Field: " <<mesh.C()[0]<< "  " << own << " "
                         << alpha1[own]
                         << " " << alpha1[neigh]
                         //<< " " << alphaApostNf.boundaryField()[patchI][faceI]
@@ -319,8 +319,8 @@
             Sout << "before: " << numerator1 << " " << denominator1 << " " << numerator2 << " " << denominator2 << endl;
 	    Foam::reduce(numerator1, sumOp<scalar>());
 	    Foam::reduce(denominator1, sumOp<scalar>());
-	    Foam::reduce(numerator2, sumOp<scalar>());
-	    Foam::reduce(denominator2, sumOp<scalar>());
+	    Foam::reduce(numerator2, maxOp<scalar>());
+	    Foam::reduce(denominator2, maxOp<scalar>());
             Sout << "after: " << numerator1 << " " << denominator1 << " " << numerator2 << " " << denominator2 << endl;
 	    TOL1 = numerator1/denominator1;
 	    TOL2 = numerator2/denominator2;
