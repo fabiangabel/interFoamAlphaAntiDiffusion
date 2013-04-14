@@ -20,7 +20,7 @@
     surfaceScalarField  alphaApostNf(alphaNf);
     volVectorField      gradAlphaNLim(fvc::grad(alphaApostNf));
     surfaceVectorField  gradAlphaNf(fvc::interpolate(gradAlphaNCd));
-    surfaceScalarField  gradAlphaNfProjectedf(gradAlphaNf & mesh.Sf());
+    //surfaceScalarField  gradAlphaNfProjectedf(gradAlphaNf & mesh.Sf());
     volScalarField      diffGradAlpha(fvc::div(-mag(phi/(mesh.magSf())) * gradAlphaNf & mesh.Sf()));
 
     /*volScalarField alpha1OldOut
@@ -83,16 +83,14 @@
     dimensionedScalar deltaTau("deltaTau",dimensionSet(0,1,1,0,0,0,0),
                 0.25*Foam::pow(deltaXMin.value(),2)/(uMax.value()+VSMALL));
 
-    Info << "Solving Anti-diffusion eqation: " << endl;
-    //Info << "Solving Anti-diffusion eqation: " ;
+    //Info << "Solving Anti-diffusion eqation: " << endl;
+    Info << "Solving Anti-diffusion eqation: " ;
     //Sout << "Solving Anti-diffusion eqation: " << endl;
 
 //##################### Perform interface steepening method ########################
 
     for (int i=0; i < maxIter; i++)
     {
-        //Info << "Iteration " << i << endl;
-
         // save last iteration value
         alpha1Old = alpha1;
 
@@ -226,8 +224,8 @@
                         alphaApostNf.boundaryField()[patchI][faceI] = alpha1.boundaryField()[patchI][faceI];
                         //Info << "case1, alphaApostNf[faceI] = " << alphaApostNf[faceI] << endl;
                     }
-                    else if (gradAlphaNProjectedf[faceI]*dAlphaNDcf[faceI] > 0.0 &&
-                             mag(gradAlphaNProjectedf[faceI]) == mag(dAlphaNDcf[faceI]))
+                    else if (gradAlphaNProjectedf.boundaryField()[patchI][faceI]*dAlphaNDcf.boundaryField()[patchI][faceI] > 0.0 &&
+                             mag(gradAlphaNProjectedf.boundaryField()[patchI][faceI]) == mag(dAlphaNDcf.boundaryField()[patchI][faceI]))
                     {
                         alphaApostNf.boundaryField()[patchI][faceI] = alphaNf.boundaryField()[patchI][faceI];
                         //Info << "case2, alphaApostNf[faceI] = " << alphaApostNf[faceI] << endl;
@@ -303,10 +301,6 @@
                     {
                         gradAlphaNf.boundaryField()[patchI][faceI] = gradAlphaNLim.boundaryField()[patchI][faceI];
                     }
-                    //Sout << "PROC: " <<  mesh.C()[0].component(0)
-                    //     << " " << gradAlphaNf.boundaryField()[patchI][faceI]
-                    //     << endl;
-                    //
                 }
             }
             else gradAlphaNf.boundaryField()[patchI] *= 0.0;
@@ -315,14 +309,16 @@
         // (33) Calculate and check tolerances #####################################
         //##########################################################################
 
-        gradAlphaNfProjectedf = gradAlphaNf & mesh.Sf();
+        //gradAlphaNfProjectedf = gradAlphaNf & mesh.Sf();
+        //not needed, since gradAlphaNLim.correctBoundaryConditions() already updates the necessary values
         //forAll (gradAlphaNfProjectedf.boundaryField(), patchI)
         //{
         //    syncTools::syncBoundaryFaceList(gradAlphaNfProjectedf.boundaryField()[patchI], mesh.boundary()[patchI].patch().faceCells(), minEqOp<scalar>());
         //}
 
         // using limitted divergence as numerator
-	numerator = mag(fvc::div(gradAlphaNfProjectedf));
+	//numerator = mag(fvc::div(gradAlphaNfProjectedf));
+	numerator = mag(fvc::div(gradAlphaNf & mesh.Sf()));
 	denominator = Foam::pow(mag(gradAlphaNCd),2);
 	numerator1 = denominator1 = numerator2 = denominator2 = 0.0;
 	forAll (mesh.cells(),cellI)
@@ -338,12 +334,10 @@
                 denominator2 = denominator[cellI]*mesh.V()[cellI];
             }
 	}
-        //Sout << "before: " << numerator1 << " " << denominator1 << " " << numerator2 << " " << denominator2 << endl;
 	Foam::reduce(numerator1, sumOp<scalar>());
 	Foam::reduce(denominator1, sumOp<scalar>());
 	Foam::reduce(numerator2, maxOp<scalar>());
 	Foam::reduce(denominator2, maxOp<scalar>());
-        //Sout << "after: " << numerator1 << " " << denominator1 << " " << numerator2 << " " << denominator2 << endl;
 	TOL1 = numerator1/denominator1;
 	TOL2 = numerator2/denominator2;
         if ((TOL1 <= 1.0 && TOL2 <= 1.0) || i==maxIter-1)
@@ -359,8 +353,8 @@
         // (30) calculate diffusionTerm ###########################################
         //##########################################################################
         diffGradAlpha =
-            //fvc::div(-mag(phi/mesh.magSf()) * gradAlphaNf & mesh.Sf());
-            fvc::div(-mag(phi/mesh.magSf()) * gradAlphaNfProjectedf);
+            fvc::div(-mag(phi/mesh.magSf()) * gradAlphaNf & mesh.Sf());
+            //fvc::div(-mag(phi/mesh.magSf()) * gradAlphaNfProjectedf);
 
         //forAll (mesh.cells(),cellI)
         //{
@@ -371,21 +365,6 @@
         //##########################################################################
         alpha1=alpha1Old+diffGradAlpha*deltaTau;
 
-        // output results #########################################################
-        //##########################################################################
-        /*
-        Info << "32 - after regulation" << endl;
-        forAll (mesh.cells(),cellI)
-        {
-            Info << cellI << " "
-                 << alpha1OOld[cellI] << " "
-                 << alpha1Old[cellI] << " "
-                 << alpha1[cellI] << " "
-                 << gradAlphaNCd[cellI] << " "
-                 << gradAlphaNLim[cellI] <<  " "
-                 << diffGradAlpha[cellI] << endl;
-        }
-        */
         // update values for next iteration
         alpha1.correctBoundaryConditions();
         gradAlphaNCd.correctBoundaryConditions();
@@ -395,13 +374,8 @@
         //alphaNf.correctBoundaryConditions();
         //dAlphaNDcf.correctBoundaryConditions();
     }
-//Sout << mesh.C()[0].component(0) << " finished successfully" << endl;
-
-
     //alpha1.write();
     //U.write();
     //std::cout << 1/0 << endl;
-
 }
-//Sout << mesh.C()[0].component(0) << " finished successfully" << endl;
 //#################################################################################
