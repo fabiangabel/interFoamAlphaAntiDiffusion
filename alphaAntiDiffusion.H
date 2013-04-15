@@ -175,8 +175,9 @@
         {
             vectorField nf = mesh.boundary()[patchI].nf();
             const labelList & faceCells = mesh.boundary()[patchI].patch().faceCells();
-	    if (alpha1.boundaryField()[patchI].type() == "fixedValue")
-            // if (alpha1.boundaryField()[patchI].fixesValue())
+	    if (alpha1.boundaryField()[patchI].type() == "fixedValue"
+                || alpha1.boundaryField()[patchI].type() == "processor")
+            //if (alpha1.boundaryField()[patchI].fixesValue()) // fixesValue only finds fixedValue patches, proc bounds remain unconsidered
             {
                 //forAll(alpha1.boundaryField()[patchI], faceI)
                 forAll (faceCells, faceI)
@@ -204,37 +205,6 @@
                         //Info << "case3, alphaApostNf[faceI] = " << alphaApostNf.boundaryField()[patchI][faceI] << endl;
                     }
                     // no mirror needed since faces of patches always store an outward pointing normal vector
-                    gradAlphaNLim[faceCells[faceI]] += alphaApostNf.boundaryField()[patchI][faceI]*mesh.Sf().boundaryField()[patchI][faceI];
-                    //Sout << gradAlphaNLim[own] << endl;
-                }
-            }
-            //same as fixedValue?
-            else if (alpha1.boundaryField()[patchI].type() == "processor")
-            {
-                //forAll(alpha1.boundaryField()[patchI], faceI)
-                forAll (faceCells, faceI)
-                {
-                    //Info << nf[faceI] << endl;
-                    //label faceIGlobal = faceI+mesh.boundaryMesh()[patchI].start();
-                    //label own = mesh.owner()[faceIGlobal];
-                    gradAlphaNProjectedf.boundaryField()[patchI][faceI] = gradAlphaNCd[faceCells[faceI]] & nf[faceI];
-                    if (gradAlphaNProjectedf.boundaryField()[patchI][faceI]*dAlphaNDcf.boundaryField()[patchI][faceI] > 0.0 &&
-                        mag(dAlphaNDcf.boundaryField()[patchI][faceI]) < mag(gradAlphaNProjectedf.boundaryField()[patchI][faceI]))
-                    {
-                        alphaApostNf.boundaryField()[patchI][faceI] = alpha1.boundaryField()[patchI][faceI];
-                        //Info << "case1, alphaApostNf[faceI] = " << alphaApostNf[faceI] << endl;
-                    }
-                    else if (gradAlphaNProjectedf.boundaryField()[patchI][faceI]*dAlphaNDcf.boundaryField()[patchI][faceI] > 0.0 &&
-                             mag(gradAlphaNProjectedf.boundaryField()[patchI][faceI]) == mag(dAlphaNDcf.boundaryField()[patchI][faceI]))
-                    {
-                        alphaApostNf.boundaryField()[patchI][faceI] = alphaNf.boundaryField()[patchI][faceI];
-                        //Info << "case2, alphaApostNf[faceI] = " << alphaApostNf[faceI] << endl;
-                    }
-                    else
-                    {
-                        alphaApostNf.boundaryField()[patchI][faceI] = alpha1[faceCells[faceI]];
-                        //Info << "case3, alphaApostNf[faceI] = " << alphaApostNf[faceI] << endl;
-                    }
                     gradAlphaNLim[faceCells[faceI]] += alphaApostNf.boundaryField()[patchI][faceI]*mesh.Sf().boundaryField()[patchI][faceI];
                     //Sout << gradAlphaNLim[own] << endl;
                 }
